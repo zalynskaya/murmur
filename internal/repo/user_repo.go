@@ -1,4 +1,6 @@
-package postgresql
+//репозиторий для работы с бд
+
+package repo
 
 import (
 	"context"
@@ -8,6 +10,8 @@ import (
 	_ "github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/zalynskaya/murmur/internal/entity"
+
+	custom_error "github.com/zalynskaya/murmur/internal/middleware"
 )
 
 type UserStorage struct {
@@ -22,14 +26,14 @@ func (u UserStorage) Create(ctx context.Context, user entity.User) (string, erro
 	var id string
 	acquire, err := u.db.Acquire(ctx)
 	if err != nil {
-		return "", err
+		return "", custom_error.ErrEntityNotFound
 	}
 	defer acquire.Release()
 
 	sql := `INSERT INTO public.user(username) VALUES ($1) RETURNING id`
 	if err := acquire.QueryRow(ctx, sql, user.Username).Scan(&id); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return "", err // add error type
+			return "", custom_error.ErrEntityNotFound
 		}
 
 		return "", err
@@ -44,26 +48,7 @@ func (u UserStorage) IsExistsByUsername(ctx context.Context, username string) (b
 
 	if err := u.db.QueryRow(ctx, sql, username).Scan(&count); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return false, err // add error type
-		}
-
-		return false, err // add error type
-	}
-
-	if count > 0 {
-		return true, nil
-	}
-
-	return false, nil
-}
-
-func (u UserStorage) IsExistsByID(ctx context.Context, userID string) (bool, error) {
-	var count int
-
-	sql := `SELECT COUNT(id) FROM public.user WHERE id=$1`
-	if err := u.db.QueryRow(ctx, sql, userID).Scan(&count); err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return false, err // add error type
+			return false, custom_error.ErrEntityNotFound
 		}
 
 		return false, err
@@ -76,13 +61,13 @@ func (u UserStorage) IsExistsByID(ctx context.Context, userID string) (bool, err
 	return false, nil
 }
 
-func (u UserStorage) IsExistsInChat(ctx context.Context, userID string, chatID int) (bool, error) {
+func (u UserStorage) IsExistsByID(ctx context.Context, id string) (bool, error) {
 	var count int
 
-	sql := `SELECT COUNT(*) FROM public.user_chat WHERE user_id=$1 AND chat_id=$2`
-	if err := u.db.QueryRow(ctx, sql, userID, chatID).Scan(&count); err != nil {
+	sql := `SELECT COUNT(id) FROM public.user WHERE id=$1`
+	if err := u.db.QueryRow(ctx, sql, id).Scan(&count); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return false, err // add error type
+			return false, custom_error.ErrEntityNotFound
 		}
 
 		return false, err

@@ -1,4 +1,4 @@
-package custom_error
+package middleware
 
 import "encoding/json"
 
@@ -7,6 +7,11 @@ type CustomError struct {
 	Message          string `json:"message,omitempty"`
 	DeveloperMessage string `json:"developer_message,omitempty"`
 }
+
+var (
+	ErrEntityNotFound = NewCustomError(nil, "entity not found", "")
+	ErrUserDuplicate  = NewCustomError(nil, "user already exists", "")
+)
 
 func NewCustomError(err error, message, developerMessage string) *CustomError {
 	return &CustomError{

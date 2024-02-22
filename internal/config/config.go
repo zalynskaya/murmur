@@ -3,9 +3,9 @@ package config
 import (
 	"log"
 	"sync"
-)
 
-// "github.com/ilyakaznacheev/cleanenv"
+	"github.com/ilyakaznacheev/cleanenv"
+)
 
 type Config struct {
 	HTTP struct {
@@ -14,7 +14,8 @@ type Config struct {
 	} `yaml:"http"`
 	PostgreSQL struct {
 		Username string `yaml:"username" env:"POSTGRES_USER" env-required:"true" env-default:"postgres"`
-		Host     string `yaml:"host" env:"POSTGRES_HOST" env-required:"true" env-default:"0.0.0.0"`
+		Password string `yaml:"password" env:"POSTGRES_PASSWORD" env-required:"true" env-default:"postgres"`
+		Host     string `yaml:"host" env:"POSTGRES_HOST" env-required:"true" env-default:"127.0.0.1"`
 		Port     string `yaml:"port" env:"POSTGRES_PORT" env-required:"true" env-default:"5432"`
 		Database string `yaml:"database" env:"POSTGRES_DB" env-required:"true" env-default:"postgres"`
 	} `yaml:"postgresql"`
@@ -32,6 +33,18 @@ func GetConfig() *Config {
 		log.Print("config init")
 
 		instance = &Config{}
+
+		if err := cleanenv.ReadConfig(configPath, instance); err != nil {
+			log.Println("Cant`t read environment variables from neither .yaml nor .env")
+			log.Println(err)
+
+			err := cleanenv.ReadEnv(instance)
+			if err != nil {
+				help, _ := cleanenv.GetDescription(instance, nil)
+				log.Println(help)
+				log.Fatalln(err)
+			}
+		}
 	})
 	return instance
 }

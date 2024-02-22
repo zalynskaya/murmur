@@ -3,7 +3,7 @@ package entity
 import "time"
 
 type Message struct {
-	MessageID int       `json:"message_id,omitempty"` // MessageID = Id
+	MessageID int       `json:"message_id,omitempty"`
 	ChatID    int       `json:"chat_id,omitempty"`
 	AuthorID  string    `json:"author_id,omitempty"`
 	Text      string    `json:"text,omitempty"`
