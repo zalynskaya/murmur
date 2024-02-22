@@ -1,0 +1,10 @@
+http:
+  ip: localhost
+  port: 9000
+
+postgresql:
+  host: 127.0.0.1
+  port: "5432"
+  username: helloworld
+  password: postgres
+  database: postgres
